@@ -89,14 +89,20 @@ const app = createApp({
 
 // 產品新增、編輯 modal 元件
 app.component('productModal',{
-    props: ['temp'],
+    props: ['temp','isNew'],
     template: '#templateForProductModal',
+    data(){
+        return{
+            apiUrl: 'https://vue3-course-api.hexschool.io/v2',
+            apiPath: 'carolli_apexc',
+        }
+    },
     methods: {
         updateProduct(){
-            let url = `${apiUrl}/api/${apiPath}/admin/product`;
+            let url = `${this.apiUrl}/api/${this.apiPath}/admin/product`;
             let method = 'post';
             if(!this.isNew){ // 如果不是新增產品，把 url 跟 method 做替換
-                url = `${apiUrl}/api/${apiPath}/admin/product/${this.temp.id}`;
+                url = `${this.apiUrl}/api/${this.apiPath}/admin/product/${this.temp.id}`;
                 method = 'put';
             }
             // 因為所有資料都要在 data 裡，所以要用 data 帶剛剛新增產品的資料
