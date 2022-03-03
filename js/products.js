@@ -1,13 +1,18 @@
 
 import { createApp } from 'https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.26/vue.esm-browser.min.js';
 
+import pagination from './pagination.js';
+
 const apiUrl = 'https://vue3-course-api.hexschool.io/v2';
 const apiPath = 'carolli_apexc';
 
 let productsModal = {}; //建議寫在外面可直接呼叫
 let delProductModal = {};
 
-createApp({
+const app = createApp({
+    components:{
+        pagination
+    },
     data(){
         return{
             temp: {
@@ -16,7 +21,8 @@ createApp({
             },
             products: [],
             // 判斷 updateProduct 跑編輯還是新增
-            isNew: false
+            isNew: false,
+            pagination:{}
         }
     },
     methods:{
@@ -34,12 +40,15 @@ createApp({
                 alert(err.data.message);
             })
         },
-        getData(){
-            axios.get(`${apiUrl}/api/${apiPath}/admin/products`)
+        getData(page = 1){ // 參數預設值
+            // query 用 ? 去帶參數
+            // param 
+            axios.get(`${apiUrl}/api/${apiPath}/admin/products/?page=${page}`)
             .then(res=>{
                 console.log(res.data.products);
                 // 成功新增 data 到 products
                 this.products = res.data.products;
+                this.pagination = res.data.pagination;
             }).catch(err=>{
                 // 錯誤跳出通知
                 console.dir(err);
@@ -66,41 +75,6 @@ createApp({
                 delProductModal.show();
             }
         },
-        updateProduct(){
-            let url = `${apiUrl}/api/${apiPath}/admin/product`;
-            let method = 'post';
-            if(!this.isNew){ // 如果不是新增產品，把 url 跟 method 做替換
-                url = `${apiUrl}/api/${apiPath}/admin/product/${this.temp.id}`;
-                method = 'put';
-            }
-            // 因為所有資料都要在 data 裡，所以要用 data 帶剛剛新增產品的資料
-            axios[method](url, {data: this.temp})
-            .then(res=>{
-                console.log(res);
-                // 重新取得產品列表
-                this.getData();
-                // 把 modal 關掉
-                productsModal.hide();
-            }).catch(err=>{
-                // 錯誤跳出通知
-                console.dir(err);
-                alert(err.data.message);
-            })
-        },
-        delProduct(){
-            axios.delete(`${apiUrl}/api/${apiPath}/admin/product/${this.temp.id}`)
-            .then(res=>{
-                console.log(res);
-                // 重新取得產品列表
-                this.getData();
-                // 把 modal 關掉
-                delProductModal.hide();
-            }).catch(err=>{
-                // 錯誤跳出通知
-                console.dir(err);
-                alert(err.data.message);
-            })
-        }
     },
     mounted(){ //當作 init
         // 取出 token，經過驗證之後才會執行 check
@@ -111,4 +85,58 @@ createApp({
         productsModal = new bootstrap.Modal(document.getElementById('productModal'));
         delProductModal = new bootstrap.Modal(document.getElementById('delProductModal'));
     }
-}).mount('#app');
+});
+
+// 產品新增、編輯 modal 元件
+app.component('productModal',{
+    props: ['temp'],
+    template: '#templateForProductModal',
+    methods: {
+        updateProduct(){
+            let url = `${apiUrl}/api/${apiPath}/admin/product`;
+            let method = 'post';
+            if(!this.isNew){ // 如果不是新增產品，把 url 跟 method 做替換
+                url = `${apiUrl}/api/${apiPath}/admin/product/${this.temp.id}`;
+                method = 'put';
+            }
+            // 因為所有資料都要在 data 裡，所以要用 data 帶剛剛新增產品的資料
+            axios[method](url, {data: this.temp})
+            .then(res=>{
+                // console.log(res);
+                // 重新取得產品列表
+                // this.getData(); // 屬於外層方法，沒辦法使用
+                this.$emit('get-data'); // 改成用 emit 由內往外取得資料
+                // 把 modal 關掉
+                productsModal.hide();
+            }).catch(err=>{
+                // 錯誤跳出通知
+                console.dir(err);
+                alert(err.data.message);
+            })
+        },
+    },
+});
+
+app.component('delModal',{
+    props: ['temp'],
+    template: '#templateForProductDel',
+    methods:{
+        delProduct(){
+            axios.delete(`${apiUrl}/api/${apiPath}/admin/product/${this.temp.id}`)
+            .then(res=>{
+                console.log(res);
+                // 重新取得產品列表
+                // this.getData(); // 屬於外層方法，沒辦法使用
+                this.$emit('get-data'); // 改成用 emit 由內往外取得資料
+                // 把 modal 關掉
+                delProductModal.hide();
+            }).catch(err=>{
+                // 錯誤跳出通知
+                console.dir(err);
+                alert(err.data.message);
+            })
+        }
+    }
+})
+
+app.mount('#app');
