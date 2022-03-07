@@ -35,9 +35,11 @@ const app = createApp({
                 this.getData();
             })
             .catch((err)=>{
-                console.dir(err);
+                // console.dir(err);
                 // 錯誤跳出通知
-                alert(err.data.message);
+                // alert(err.data.message);
+                // 錯誤返回登入頁面
+                window.location = './login.html';
             })
         },
         getData(page = 1){ // 參數預設值
@@ -45,13 +47,13 @@ const app = createApp({
             // param 
             axios.get(`${apiUrl}/api/${apiPath}/admin/products/?page=${page}`)
             .then(res=>{
-                console.log(res.data.products);
+                // console.log(res.data.products);
                 // 成功新增 data 到 products
                 this.products = res.data.products;
                 this.pagination = res.data.pagination;
             }).catch(err=>{
                 // 錯誤跳出通知
-                console.dir(err);
+                // console.dir(err);
                 alert(err.data.message);
             })
         },
@@ -59,7 +61,7 @@ const app = createApp({
             this.temp = item;
         },
         openModal(status, product){
-            console.log(status, product);
+            // console.log(status, product);
             if( status === 'isNew'){ // 新增產品，temp 等於空的
                 this.temp = {
                     imagesUrl: [],
@@ -68,6 +70,8 @@ const app = createApp({
                 this.isNew = true;
             }else if(status === 'edit'){ // 編輯產品，temp 就是該產品
                 this.temp = { ...product };
+                // 當 temp.imagesUrl 有資料時就使用原本的資料，沒有的話就賦予一個陣列
+                this.imagesUrl = this.temp.imagesUrl ? this.temp.imagesUrl : [];
                 productsModal.show();
                 this.isNew = false;
             }else if(status === 'delete'){ // 刪除產品
@@ -81,7 +85,7 @@ const app = createApp({
         const token = document.cookie.replace(/(?:(?:^|.*;\s*)loginToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         axios.defaults.headers.common['Authorization'] = token;
         this.checkLogin();
-        console.log(token);
+        // console.log(token);
         productsModal = new bootstrap.Modal(document.getElementById('productModal'));
         delProductModal = new bootstrap.Modal(document.getElementById('delProductModal'));
     }
@@ -116,7 +120,7 @@ app.component('productModal',{
                 productsModal.hide();
             }).catch(err=>{
                 // 錯誤跳出通知
-                console.dir(err);
+                // console.dir(err);
                 alert(err.data.message);
             })
         },
@@ -130,7 +134,7 @@ app.component('delModal',{
         delProduct(){
             axios.delete(`${apiUrl}/api/${apiPath}/admin/product/${this.temp.id}`)
             .then(res=>{
-                console.log(res);
+                // console.log(res);
                 // 重新取得產品列表
                 // this.getData(); // 屬於外層方法，沒辦法使用
                 this.$emit('get-data'); // 改成用 emit 由內往外取得資料
@@ -138,7 +142,7 @@ app.component('delModal',{
                 delProductModal.hide();
             }).catch(err=>{
                 // 錯誤跳出通知
-                console.dir(err);
+                // console.dir(err);
                 alert(err.data.message);
             })
         }
